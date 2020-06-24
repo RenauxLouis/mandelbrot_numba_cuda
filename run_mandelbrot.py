@@ -1,33 +1,3 @@
-# Interactive Mandelbrot Set Accelerated using Numba
-# Classical Iteration Method
-# Luis Villasenor
-# lvillasen@gmail.com
-# 2/8/2016
-# Licence: GPLv3
-
-# Usage
-
-# Use the left buttom to draw a square to zoom into
-
-# Point and click with the right buttom to magnify by a factor of 10
-
-# Click with the left button on the rigth side of the
-# image to randomly change the colormap
-
-# Click with right button on the right side of the image to set the default colormap
-
-# Click on the left side of the image to restart with the full Mandelbrot set
-
-# Press the up/down arrow to increase/decrease the maximum number of iterations
-
-# Press the right/left arrow to increase/decrease the number of pixels
-
-# Type a number from 1-9 to set power index of the iteration formula
-
-# Type 'f' to toggle full-screen mode
-
-# Type 's' to save the image
-
 import numpy as np
 from pylab import cm as cm
 import matplotlib.pyplot as plt
@@ -131,12 +101,7 @@ def key_selector(event):
         L=int(L*1.2);
 
         M = np.zeros((N_pixel, N_pixel), dtype = np.uint8)
-        # create_fractal(x1_coo, y1_coo, N_coo, M)
         plot_image(M)
-        # M = np.zeros((N, N), dtype = np.uint8)
-        # d_image = cuda.to_device(M)
-        # mandel_kernel[griddim, blockdim](x1_coo,y1_coo,x1_coo+N_coo,y1_coo+L, d_image)
-        # d_image.to_host()
 
         myobj = plt.imshow(M,cmap=cmaps[i_cmap],origin='lower')
         ax.set_title('Side=%.2e, x=%.2e, y=%.2e, %s, L=%d'%(N_coo,x1_coo,y1_coo,cmaps[i_cmap],L))
@@ -144,13 +109,7 @@ def key_selector(event):
     if event.key == u'down':  # Decrease max number of iterations
         L=int(L/1.2);
 
-
-        # M = np.zeros((1024, 1536), dtype = np.uint8)
-        # d_image = cuda.to_device(M)
-        # mandel_kernel[griddim, blockdim](x1_coo,y1_coo,x1_coo+N_coo,y1_coo+L, d_image)
-        # d_image.to_host()
         M = np.zeros((N_pixel, N_pixel), dtype = np.uint8)
-        # create_fractal(x1_coo, y1_coo, N_coo, M)
         plot_image(M)
 
         myobj = plt.imshow(M,cmap=cmaps[i_cmap],origin='lower')
@@ -159,14 +118,7 @@ def key_selector(event):
     if event.key == u'right':  # Increase  number of pixels
         N_pixel=int(N_pixel*1.2);
 
-
-        # M = np.zeros((N, N), dtype = np.uint8)
-        # d_image = cuda.to_device(M)
-        # mandel_kernel[griddim, blockdim](x1_coo,y1_coo,x1_coo+N_coo,y1_coo+L, d_image)
-        # d_image.to_host()
-
         M = np.zeros((N_pixel, N_pixel), dtype = np.uint8)
-        # create_fractal(x1_coo, y1_coo, N_coo, M)
         plot_image(M)
 
         myobj = plt.imshow(M,cmap=cmaps[i_cmap],origin='lower')
@@ -175,14 +127,7 @@ def key_selector(event):
     if event.key == u'left':  # Decrease  number of pixels
         N_pixel=int(N_pixel/1.2);
 
-
-        # M = np.zeros((N, N), dtype = np.uint8)
-        # d_image = cuda.to_device(M)
-        # mandel_kernel[griddim, blockdim](x1_coo,y1_coo,x1_coo+N_coo,y1_coo+L, d_image)
-        # d_image.to_host()
-
         M = np.zeros((N_pixel, N_pixel), dtype = np.uint8)
-        # create_fractal(x1_coo, y1_coo, N_coo, M)
         plot_image(M)
 
         myobj = plt.imshow(M,cmap=cmaps[i_cmap],origin='lower')
@@ -196,13 +141,7 @@ def key_selector(event):
             N_coo=3.0; x1_coo=-.5;y1_coo=0.;L=200;
 
             M = np.zeros((N_pixel, N_pixel), dtype = np.uint8)
-            # create_fractal(x1_coo, y1_coo, N_coo, M)
             plot_image(M)
-
-            # M = np.zeros((N, N), dtype = np.uint8)
-            # d_image = cuda.to_device(M)
-            # mandel_kernel[griddim, blockdim](x1_coo,y1_coo,x1_coo+N_coo,y1_coo+L, d_image)
-            # d_image.to_host()
 
             myobj = plt.imshow(M,cmap=cmaps[i_cmap],origin='lower')
             ax.set_title('Side=%.2e, x=%.2e, y=%.2e, %s, L=%d'%(N_coo,x1_coo,y1_coo,cmaps[i_cmap],L))
