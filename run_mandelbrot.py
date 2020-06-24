@@ -1,11 +1,10 @@
-import numpy as np
-from pylab import cm as cm
 import matplotlib.pyplot as plt
-from matplotlib.widgets import RectangleSelector
-from matplotlib.patches import Rectangle
 import numba
+import numpy as np
+from matplotlib.patches import Rectangle
+from matplotlib.widgets import RectangleSelector
 from numba import cuda
-
+from pylab import cm as cm
 
 global N_pixel, x1_coo, y1_coo, N_coo, L, M, power
 L=800
@@ -211,4 +210,3 @@ plot_image(M)
 ax.set_title('Side=%.2e, x=%.2e, y=%.2e, %s, L=%d'%(N_coo,x1_coo,y1_coo,cmaps[i_cmap],L))
 plt.imshow(M,origin='lower',cmap=cmaps[i_cmap])
 plt.show()
-
