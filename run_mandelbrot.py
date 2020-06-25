@@ -23,7 +23,7 @@ def mandel(x, y, iters):
     return iters
 
 
-@cuda.jit
+@numba.jit
 def create_fractal(x_0, y_0, n_coo, d_image, n_pixel, iters):
 
     pixel_size_x = n_coo / n_pixel
