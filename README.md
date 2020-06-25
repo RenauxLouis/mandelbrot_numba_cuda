@@ -6,4 +6,4 @@ Left-click on the left side of the image to restart with the full Mandelbrot set
 Press 'f' for full-screen mode<br />
 Press 's' to save the image
 
-Requirement: CUDA-enabled GPU (otherwise please use the flag --no_cuda)
+Requirement: CUDA-enabled GPU (otherwise please use the flag `--no_cuda`)
