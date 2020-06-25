@@ -1,3 +1,5 @@
+import argparse
+
 import matplotlib.pyplot as plt
 import numba
 import numpy as np
@@ -5,7 +7,6 @@ from matplotlib.patches import Rectangle
 from matplotlib.widgets import RectangleSelector
 from numba import cuda
 from pylab import cm as cm
-import argparse
 
 BLOCKDIM = (32, 8)
 GRIDDIM = (32, 16)
@@ -156,7 +157,8 @@ def plot_image(no_cuda, image, n_coo, x1_coo, y1_coo, n_pixel, iters):
         create_fractal(x1_coo, y1_coo, n_coo, image, n_pixel, iters)
     else:
         d_image = cuda.to_device(image)
-        mandel_kernel[GRIDDIM, BLOCKDIM](x1_coo, y1_coo, n_coo, d_image, n_pixel, iters)
+        mandel_kernel[GRIDDIM, BLOCKDIM](x1_coo, y1_coo, n_coo,
+                                         d_image, n_pixel, iters)
         d_image.to_host()
 
 
