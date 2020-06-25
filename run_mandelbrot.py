@@ -22,27 +22,39 @@ def mandel(x, y, iters):
     return iters
 
 
-mandel_gpu = cuda.jit(device=True)(mandel)
+@cuda.jit
+def create_fractal(x_0, y_0, n_coo, d_image, n_pixel, iters):
+
+    pixel_size_x = n_coo / n_pixel
+    pixel_size_y = n_coo / n_pixel
+
+    for x in range(n_pixel):
+        real = x_0 + x * pixel_size_x
+        for y in range(n_pixel):
+            imag = y_0 + y * pixel_size_y
+            color = mandel(real, imag, iters)
+            d_image[y, x] = color
 
 
 @cuda.jit
-def mandel_kernel(x_0, y_0, N_coo, d_image, N_pixel, iters):
-    pixel_size_x = N_coo / N_pixel
-    pixel_size_y = N_coo / N_pixel
+def mandel_kernel(x_0, y_0, n_coo, d_image, n_pixel, iters):
+
+    pixel_size_x = n_coo / n_pixel
+    pixel_size_y = n_coo / n_pixel
 
     startX, startY = cuda.grid(2)
     gridX = cuda.gridDim.x * cuda.blockDim.x
     gridY = cuda.gridDim.y * cuda.blockDim.y
 
-    for x in range(startX, N_pixel, gridX):
+    for x in range(startX, n_pixel, gridX):
         real = x_0 + x * pixel_size_x
-        for y in range(startY, N_pixel, gridY):
+        for y in range(startY, n_pixel, gridY):
             imag = y_0 + y * pixel_size_y
             d_image[y, x] = mandel_gpu(real, imag, iters)
 
 
 def zoom_on_square(eclick, erelease):
-    global N_pixel, N_coo, x1_coo, y1_coo, myobj, M, power
+    global n_pixel, n_coo, x1_coo, y1_coo, myobj, image, power
 
     x1_pixel, y1_pixel = min(eclick.xdata, erelease.xdata), min(
         eclick.ydata, erelease.ydata)
@@ -66,87 +78,93 @@ def zoom_on_square(eclick, erelease):
 
     zoom_N_pixel = y2_pixel - y1_pixel
     # Convert from pixel to coordinates in the plane
-    ratio_coo_pixel = N_coo / N_pixel
+    ratio_coo_pixel = n_coo / n_pixel
     x1_coo = x1_coo + x1_pixel * ratio_coo_pixel
     y1_coo = y1_coo + y1_pixel * ratio_coo_pixel
-    N_coo = zoom_N_pixel * ratio_coo_pixel
+    n_coo = zoom_N_pixel * ratio_coo_pixel
 
     # Compute the mandelbrot set
-    M = np.zeros((N_pixel, N_pixel), dtype=np.uint8)
-    plot_image(M, N_coo, x1_coo, y1_coo, N_pixel, iters)
+    image = np.zeros((n_pixel, n_pixel), dtype=np.uint8)
+    plot_image(no_cuda, image, n_coo, x1_coo, y1_coo, n_pixel, iters)
 
-    myobj = plt.imshow(M, origin="lower", cmap=cmaps[i_cmap])
-    myobj.set_data(M)
+    myobj = plt.imshow(image, origin="lower", cmap=cmaps[i_cmap])
+    myobj.set_data(image)
     ax.add_patch(Rectangle((1 - .1, 1 - .1), 0.2, 0.2,
                            alpha=1, facecolor="none", fill=None, ))
     ax.set_title("Side=%.2e, x=%.2e, y=%.2e, %s, iters=%d" %
-                 (N_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
+                 (n_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
     plt.draw()
 
 
 def zoom_on_point(event):
-    global N_pixel, N_coo, x1_coo, y1_coo, myobj, iters, M, i_cmap, power
+    global n_pixel, n_coo, x1_coo, y1_coo, myobj, iters, image, i_cmap, power
 
-    # Zoom on clicked point; new N_coo=10% of old N_coo
+    # Zoom on clicked point; new n_coo=10% of old n_coo
     if event.button == 3 and event.inaxes:
         x1_pixel, y1_pixel = event.xdata, event.ydata
-        x1_coo = x1_coo+N_coo*(x1_pixel-N_pixel/2.)/N_pixel
-        y1_coo = y1_coo+N_coo*(y1_pixel-N_pixel/2.)/N_pixel
-        N_coo = N_coo*.1
+        x1_coo = x1_coo+n_coo*(x1_pixel-n_pixel/2.)/n_pixel
+        y1_coo = y1_coo+n_coo*(y1_pixel-n_pixel/2.)/n_pixel
+        n_coo = n_coo*.1
 
-        M = np.zeros((N_pixel, N_pixel), dtype=np.uint8)
-        plot_image(M, N_coo, x1_coo, y1_coo, N_pixel, iters)
+        image = np.zeros((n_pixel, n_pixel), dtype=np.uint8)
+        plot_image(no_cuda, image, n_coo, x1_coo, y1_coo, n_pixel, iters)
 
-        myobj = plt.imshow(M, origin="lower", cmap=cmaps[i_cmap])
+        myobj = plt.imshow(image, origin="lower", cmap=cmaps[i_cmap])
         ax.set_title("Side=%.2e, x=%.2e, y=%.2e, %s, iters=%d" %
-                     (N_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
+                     (n_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
         plt.draw()
 
-    # Click on left N_coo of image to reset to full fractal
-    if not event.inaxes and event.x < .3*N_pixel:
+    # Click on left n_coo of image to reset to full fractal
+    if not event.inaxes and event.x < .3*n_pixel:
         power = 2
-        N_coo = 3.0
+        n_coo = 3.0
         x1_coo = -.5
         y1_coo = 0.
         i_cmap = 49
 
-        M = np.zeros((N_pixel, N_pixel), dtype=np.uint8)
-        plot_image(M, N_coo, x1_coo, y1_coo, N_pixel, iters)
+        image = np.zeros((n_pixel, n_pixel), dtype=np.uint8)
+        plot_image(no_cuda, image, n_coo, x1_coo, y1_coo, n_pixel, iters)
 
-        myobj = plt.imshow(M, cmap=cmaps[i_cmap], origin="lower")
+        myobj = plt.imshow(image, cmap=cmaps[i_cmap], origin="lower")
         ax.set_title("Side=%.2e, x=%.2e, y=%.2e, %s, iters=%d" %
-                     (N_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
+                     (n_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
         plt.draw()
 
-    # Left click on right N_coo of image to set a random colormap
-    if event.button == 1 and not event.inaxes and event.x > .7*N_pixel:
+    # Left click on right n_coo of image to set a random colormap
+    if event.button == 1 and not event.inaxes and event.x > .7*n_pixel:
         i_cmap_current = i_cmap
         i_cmap = np.random.randint(len(cmaps))
         if i_cmap == i_cmap_current:
             i_cmap -= 1
             if i_cmap < 0:
                 i_cmap = len(cmaps)-1
-        myobj = plt.imshow(M, origin="lower", cmap=cmaps[i_cmap])
+        myobj = plt.imshow(image, origin="lower", cmap=cmaps[i_cmap])
         ax.set_title("Side=%.2e, x=%.2e, y=%.2e, %s, iters=%d" %
-                     (N_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
+                     (n_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
         plt.draw()
-    # Right click on right N_coo to set colormap="flag"
-    if event.button == 3 and not event.inaxes and event.x > .7*N_pixel:
+    # Right click on right n_coo to set colormap="flag"
+    if event.button == 3 and not event.inaxes and event.x > .7*n_pixel:
         i_cmap = 49
-        myobj = plt.imshow(M, origin="lower", cmap=cmaps[i_cmap])
+        myobj = plt.imshow(image, origin="lower", cmap=cmaps[i_cmap])
         ax.set_title("Side=%.2e, x=%.2e, y=%.2e, %s, iters=%d" %
-                     (N_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
+                     (n_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
         plt.draw()
 
 
-def plot_image(M, N_coo, x1_coo, y1_coo, N_pixel, iters):
-    d_image = cuda.to_device(M)
-    mandel_kernel[GRIDDIM, BLOCKDIM](x1_coo, y1_coo, N_coo, d_image, N_pixel, iters)
-    d_image.to_host()
+def plot_image(no_cuda, image, n_coo, x1_coo, y1_coo, n_pixel, iters):
+    if no_cuda:
+        create_fractal(x1_coo, y1_coo, n_coo, image, n_pixel, iters)
+    else:
+        d_image = cuda.to_device(image)
+        mandel_kernel[GRIDDIM, BLOCKDIM](x1_coo, y1_coo, n_coo, d_image, n_pixel, iters)
+        d_image.to_host()
 
 
-def main(iters, N_pixel, x1_coo, y1_coo, N_coo, i_cmap, power):
-    global cmaps, ax
+def main():
+    global cmaps, ax, image, mandel_gpu
+
+    if not no_cuda:
+        mandel_gpu = cuda.jit(device=True)(mandel)
 
     fig = plt.figure(figsize=(12, 12))
     fig.suptitle("Interactive Mandelbrot Set Accelerated using Numba")
@@ -159,23 +177,24 @@ def main(iters, N_pixel, x1_coo, y1_coo, N_coo, i_cmap, power):
 
     fig.canvas.mpl_connect("button_press_event", zoom_on_point)
 
-    M = np.zeros((N_pixel, N_pixel), dtype=np.uint8)
-    plot_image(M, N_coo, x1_coo, y1_coo, N_pixel, iters)
+    image = np.zeros((n_pixel, n_pixel), dtype=np.uint8)
+    plot_image(no_cuda, image, n_coo, x1_coo, y1_coo, n_pixel, iters)
 
     ax.set_title("Side=%.2e, x=%.2e, y=%.2e, %s, iters=%d" %
-                (N_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
-    plt.imshow(M, origin="lower", cmap=cmaps[i_cmap])
+                (n_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
+    plt.imshow(image, origin="lower", cmap=cmaps[i_cmap])
     plt.show()
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Preprocessing Pipeline")
+    parser.add_argument("--no_cuda", action="store_true")
     parser.add_argument("--iters", type=int, default=800)
-    parser.add_argument("--N_pixel", type=int, default=1024)
+    parser.add_argument("--n_pixel", type=int, default=1024)
     parser.add_argument("--x1_coo", type=float, default=-1.5)
     parser.add_argument("--y1_coo", type=float, default=-1.5)
-    parser.add_argument("--N_coo", type=float, default=3.)
+    parser.add_argument("--n_coo", type=float, default=3.)
     parser.add_argument("--i_cmap", type=int, default=49)
     parser.add_argument("--power", type=int, default=2)
     args = parser.parse_args()
@@ -184,17 +203,16 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    global N_coo, N_pixel, x1_coo, y1_coo, iters
+    global no_cuda, n_coo, n_pixel, x1_coo, y1_coo, iters, i_cmap, power
 
     args = parse_args()
-    N_coo = args.N_coo
-    N_pixel = args.N_pixel
+    no_cuda=args.no_cuda
+    n_coo = args.n_coo
+    n_pixel = args.n_pixel
     x1_coo = args.x1_coo
     y1_coo = args.y1_coo
     iters = args.iters
     i_cmap = args.i_cmap
     power = args.power
 
-    main(iters=iters, N_pixel=N_pixel,
-         x1_coo=x1_coo, y1_coo=y1_coo, N_coo=N_coo,
-         i_cmap=i_cmap, power=power)
+    main()
