@@ -103,9 +103,9 @@ def zoom_on_point(event):
     # Zoom on clicked point; new n_coo=10% of old n_coo
     if event.button == 3 and event.inaxes:
         x1_pixel, y1_pixel = event.xdata, event.ydata
-        x1_coo = x1_coo+n_coo*(x1_pixel-n_pixel/2.)/n_pixel
-        y1_coo = y1_coo+n_coo*(y1_pixel-n_pixel/2.)/n_pixel
-        n_coo = n_coo*.1
+        x1_coo = x1_coo + n_coo * (x1_pixel - n_pixel / 2.) / n_pixel
+        y1_coo = y1_coo + n_coo * (y1_pixel - n_pixel / 2.) / n_pixel
+        n_coo = n_coo * .1
 
         image = np.zeros((n_pixel, n_pixel), dtype=np.uint8)
         plot_image(no_cuda, image, n_coo, x1_coo, y1_coo, n_pixel, iters)
@@ -121,7 +121,7 @@ def zoom_on_point(event):
         n_coo = 3.0
         x1_coo = -.5
         y1_coo = 0.
-        i_cmap = 49
+        i_cmap = 52
 
         image = np.zeros((n_pixel, n_pixel), dtype=np.uint8)
         plot_image(no_cuda, image, n_coo, x1_coo, y1_coo, n_pixel, iters)
@@ -132,20 +132,20 @@ def zoom_on_point(event):
         plt.draw()
 
     # Left click on right n_coo of image to set a random colormap
-    if event.button == 1 and not event.inaxes and event.x > .7*n_pixel:
+    if event.button == 1 and not event.inaxes and event.x > .7 * n_pixel:
         i_cmap_current = i_cmap
         i_cmap = np.random.randint(len(cmaps))
         if i_cmap == i_cmap_current:
             i_cmap -= 1
             if i_cmap < 0:
-                i_cmap = len(cmaps)-1
+                i_cmap = len(cmaps) - 1
         myobj = plt.imshow(image, origin="lower", cmap=cmaps[i_cmap])
         ax.set_title("Side=%.2e, x=%.2e, y=%.2e, %s, iters=%d" %
                      (n_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
         plt.draw()
     # Right click on right n_coo to set colormap="flag"
-    if event.button == 3 and not event.inaxes and event.x > .7*n_pixel:
-        i_cmap = 49
+    if event.button == 3 and not event.inaxes and event.x > .7 * n_pixel:
+        i_cmap = 52
         myobj = plt.imshow(image, origin="lower", cmap=cmaps[i_cmap])
         ax.set_title("Side=%.2e, x=%.2e, y=%.2e, %s, iters=%d" %
                      (n_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
@@ -183,7 +183,7 @@ def main():
     plot_image(no_cuda, image, n_coo, x1_coo, y1_coo, n_pixel, iters)
 
     ax.set_title("Side=%.2e, x=%.2e, y=%.2e, %s, iters=%d" %
-                (n_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
+                 (n_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
     plt.imshow(image, origin="lower", cmap=cmaps[i_cmap])
     plt.show()
 
@@ -197,7 +197,7 @@ def parse_args():
     parser.add_argument("--x1_coo", type=float, default=-1.5)
     parser.add_argument("--y1_coo", type=float, default=-1.5)
     parser.add_argument("--n_coo", type=float, default=3.)
-    parser.add_argument("--i_cmap", type=int, default=49)
+    parser.add_argument("--i_cmap", type=int, default=52)
     parser.add_argument("--power", type=int, default=2)
     args = parser.parse_args()
 
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     global no_cuda, n_coo, n_pixel, x1_coo, y1_coo, iters, i_cmap, power
 
     args = parse_args()
-    no_cuda=args.no_cuda
+    no_cuda = args.no_cuda
     n_coo = args.n_coo
     n_pixel = args.n_pixel
     x1_coo = args.x1_coo
