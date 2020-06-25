@@ -142,7 +142,8 @@ def zoom_on_point(event):
 
 def plot_image(M, N_coo, x1_coo, y1_coo, N_pixel, iters):
     d_image = cuda.to_device(M)
-    mandel_kernel[GRIDDIM, BLOCKDIM](x1_coo, y1_coo, N_coo, d_image, N_pixel, iters)
+    mandel_kernel[GRIDDIM, BLOCKDIM](x1_coo, y1_coo, N_coo,
+                                     d_image, N_pixel, iters)
     d_image.to_host()
 
 
@@ -164,7 +165,7 @@ def main(iters, N_pixel, x1_coo, y1_coo, N_coo, i_cmap, power):
     plot_image(M, N_coo, x1_coo, y1_coo, N_pixel, iters)
 
     ax.set_title("Side=%.2e, x=%.2e, y=%.2e, %s, iters=%d" %
-                (N_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
+                 (N_coo, x1_coo, y1_coo, cmaps[i_cmap], iters))
     plt.imshow(M, origin="lower", cmap=cmaps[i_cmap])
     plt.show()
 
