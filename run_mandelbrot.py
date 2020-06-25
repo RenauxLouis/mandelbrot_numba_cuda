@@ -1,3 +1,5 @@
+import argparse
+
 import matplotlib.pyplot as plt
 import numba
 import numpy as np
@@ -5,7 +7,6 @@ from matplotlib.patches import Rectangle
 from matplotlib.widgets import RectangleSelector
 from numba import cuda
 from pylab import cm as cm
-import argparse
 
 BLOCKDIM = (32, 8)
 GRIDDIM = (32, 16)
